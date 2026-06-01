@@ -183,6 +183,10 @@ html,body{height:100%;background:var(--bg);color:var(--text1);font-family:var(--
 
   <header class="topbar">
     <div class="logo"><div class="logo-icon">🚐</div>Escala de Motoristas</div>
+    <div id="sync-status" style="display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,0.8);padding:4px 10px;background:rgba(255,255,255,0.12);border-radius:4px;cursor:pointer" onclick="switchTab('config', document.querySelectorAll('.nav-item')[4])" title="Status da sincronização">
+      <span id="sync-dot" style="width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.4);flex-shrink:0"></span>
+      <span id="sync-label">Não configurado</span>
+    </div>
     <div class="week-pill">
       <button onclick="changeWeek(-1)" title="Semana anterior">‹</button>
       <span class="week-name" id="week-display">Carregando...</span>
@@ -200,6 +204,8 @@ html,body{height:100%;background:var(--bg);color:var(--text1);font-family:var(--
     <button class="nav-item" onclick="switchTab('tv',this)"><span class="nav-icon">📺</span> Gerar para TV</button>
     <div class="nav-section" style="margin-top:6px">Dados</div>
     <button class="nav-item" onclick="switchTab('historico',this)"><span class="nav-icon">🗂</span> Histórico</button>
+    <div class="nav-section" style="margin-top:6px">Sistema</div>
+    <button class="nav-item" onclick="switchTab('config',this)"><span class="nav-icon">⚙️</span> Configurações</button>
   </nav>
 
   <main class="main">
@@ -295,6 +301,65 @@ html,body{height:100%;background:var(--bg);color:var(--text1);font-family:var(--
       <div class="history-grid" id="hist-list"></div>
     </div>
 
+    <!-- CONFIG -->
+    <div id="sec-config" class="section">
+      <div class="page-title">Configurações</div>
+      <div class="page-sub">Sincronização via GitHub Gist — os dados ficam acessíveis em qualquer dispositivo</div>
+
+      <div class="card" style="max-width:620px;margin-bottom:16px">
+        <div class="card-title">GitHub Gist — Sincronização</div>
+        <div style="background:#e8f1fd;border:1px solid #bdd5f7;border-radius:6px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:#1d3461;line-height:1.6">
+          <strong>Como configurar:</strong><br>
+          1. Acesse <a href="https://github.com/settings/tokens" target="_blank" style="color:var(--accent)">github.com/settings/tokens</a> → <em>Generate new token (classic)</em><br>
+          2. Marque apenas o escopo <strong>gist</strong> e gere o token<br>
+          3. Acesse <a href="https://gist.github.com" target="_blank" style="color:var(--accent)">gist.github.com</a> → crie um Gist <strong>secreto</strong> com qualquer arquivo<br>
+          4. Copie o ID do Gist (os ~32 caracteres na URL) e cole abaixo<br>
+          5. Clique em <strong>Salvar e Sincronizar</strong>
+        </div>
+        <div class="form-grid" style="margin-bottom:12px">
+          <div class="field" style="grid-column:1/-1">
+            <label>GitHub Personal Access Token</label>
+            <input type="password" id="cfg-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+          </div>
+          <div class="field" style="grid-column:1/-1">
+            <label>Gist ID</label>
+            <input type="text" id="cfg-gist" placeholder="ex: a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4">
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:4px">
+          <div id="cfg-status" style="font-size:12px;color:var(--text2)"></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn" onclick="syncFromGist(true)">⬇ Baixar do Gist</button>
+            <button class="btn" onclick="pushToGist(true)">⬆ Enviar para Gist</button>
+            <button class="btn btn-primary" onclick="saveCfgAndSync()">💾 Salvar e Sincronizar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="max-width:620px">
+        <div class="card-title">Sincronização Automática</div>
+        <div class="form-grid g1" style="margin-bottom:12px">
+          <div class="field">
+            <label>Intervalo de sincronização automática</label>
+            <select id="cfg-interval">
+              <option value="0">Desativada</option>
+              <option value="60">A cada 1 minuto</option>
+              <option value="300" selected>A cada 5 minutos</option>
+              <option value="600">A cada 10 minutos</option>
+              <option value="1800">A cada 30 minutos</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end">
+          <button class="btn btn-primary" onclick="saveInterval()">Salvar intervalo</button>
+        </div>
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+          <div style="font-size:12px;color:var(--text3);margin-bottom:4px">Última sincronização</div>
+          <div id="cfg-last-sync" style="font-size:13px;color:var(--text2)">—</div>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -340,11 +405,19 @@ html,body{height:100%;background:var(--bg);color:var(--text1);font-family:var(--
 const DAYS = ['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo'];
 const DAY_COLORS_HEX = ['#0a6ed1','#107e3e','#c44500','#bb0000','#5c35cc','#a0003c','#1b6b0a'];
 
+// ── Estado e config ──
 let state = JSON.parse(localStorage.getItem('escala_v2') || '{"trips":[],"savedWeeks":[]}');
+let cfg   = JSON.parse(localStorage.getItem('escala_cfg') || '{"token":"","gist":"","interval":300}');
+let syncTimer = null;
+let isSyncing = false;
 let currentWeek = '';
 let editingId = null;
 
-function save(){ localStorage.setItem('escala_v2', JSON.stringify(state)); }
+function saveCfg(){ localStorage.setItem('escala_cfg', JSON.stringify(cfg)); }
+function save(){
+  localStorage.setItem('escala_v2', JSON.stringify(state));
+  if(cfg.token && cfg.gist) pushToGist(false);
+}
 
 function toast(msg, type='success'){
   const w = document.getElementById('toast-wrap');
@@ -381,6 +454,126 @@ function initApp(){
   document.getElementById('tv-week').value = currentWeek;
   document.getElementById('week-display').textContent = getWeekLabel(currentWeek);
   updateDataLists();
+  loadCfgFields();
+  updateSyncStatus();
+  if(cfg.token && cfg.gist){
+    syncFromGist(false);
+    startAutoSync();
+  }
+}
+
+/* ──── GIST SYNC ──── */
+const GIST_FILE = 'escala-motoristas.json';
+
+function loadCfgFields(){
+  document.getElementById('cfg-token').value = cfg.token||'';
+  document.getElementById('cfg-gist').value  = cfg.gist||'';
+  document.getElementById('cfg-interval').value = cfg.interval||300;
+  const ls = localStorage.getItem('escala_last_sync');
+  document.getElementById('cfg-last-sync').textContent = ls ? new Date(ls).toLocaleString('pt-BR') : '—';
+}
+
+function setSyncStatus(status, label){
+  const dot   = document.getElementById('sync-dot');
+  const lbl   = document.getElementById('sync-label');
+  const colors = {ok:'#22c98a', error:'#f05c5c', syncing:'#f0a940', none:'rgba(255,255,255,0.4)'};
+  dot.style.background = colors[status]||colors.none;
+  lbl.textContent = label;
+}
+
+function updateSyncStatus(){
+  if(!cfg.token||!cfg.gist){ setSyncStatus('none','Não configurado'); return; }
+  const ls = localStorage.getItem('escala_last_sync');
+  if(ls) setSyncStatus('ok','Sincronizado '+new Date(ls).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}));
+  else setSyncStatus('none','Configurado');
+}
+
+async function pushToGist(verbose){
+  if(isSyncing||!cfg.token||!cfg.gist) return;
+  isSyncing = true;
+  if(verbose) setSyncStatus('syncing','Enviando…');
+  try{
+    const res = await fetch(`https://api.github.com/gists/${cfg.gist}`,{
+      method:'PATCH',
+      headers:{'Authorization':'token '+cfg.token,'Content-Type':'application/json'},
+      body: JSON.stringify({files:{[GIST_FILE]:{content:JSON.stringify(state,null,2)}}})
+    });
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const now = new Date().toISOString();
+    localStorage.setItem('escala_last_sync', now);
+    document.getElementById('cfg-last-sync').textContent = new Date(now).toLocaleString('pt-BR');
+    setSyncStatus('ok','Sincronizado '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}));
+    if(verbose) toast('Dados enviados ao Gist!');
+  } catch(e){
+    setSyncStatus('error','Erro ao enviar');
+    if(verbose) toast('Erro ao enviar: '+e.message,'error');
+  } finally{ isSyncing=false; }
+}
+
+async function syncFromGist(verbose){
+  if(isSyncing||!cfg.token||!cfg.gist) return;
+  isSyncing = true;
+  setSyncStatus('syncing','Sincronizando…');
+  try{
+    const res = await fetch(`https://api.github.com/gists/${cfg.gist}`,{
+      headers:{'Authorization':'token '+cfg.token}
+    });
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    const file = data.files && data.files[GIST_FILE];
+    if(file && file.content){
+      const remote = JSON.parse(file.content);
+      // Merge: mantém registros locais + remotos sem duplicar por id
+      const allTrips = [...state.trips];
+      (remote.trips||[]).forEach(rt=>{
+        if(!allTrips.find(lt=>lt.id===rt.id)) allTrips.push(rt);
+      });
+      const allWeeks = [...new Set([...(state.savedWeeks||[]),...(remote.savedWeeks||[])])];
+      state = {trips:allTrips, savedWeeks:allWeeks};
+      localStorage.setItem('escala_v2', JSON.stringify(state));
+    }
+    const now = new Date().toISOString();
+    localStorage.setItem('escala_last_sync', now);
+    document.getElementById('cfg-last-sync').textContent = new Date(now).toLocaleString('pt-BR');
+    setSyncStatus('ok','Sincronizado '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}));
+    updateDataLists();
+    const active = document.querySelector('.section.active');
+    if(active && active.id==='sec-semana') renderSemana();
+    if(active && active.id==='sec-grade') renderGrade();
+    if(active && active.id==='sec-historico') renderHistorico();
+    if(verbose) toast('Dados atualizados do Gist!');
+  } catch(e){
+    setSyncStatus('error','Erro ao sincronizar');
+    if(verbose) toast('Erro ao sincronizar: '+e.message,'error');
+  } finally{ isSyncing=false; }
+}
+
+async function saveCfgAndSync(){
+  cfg.token    = document.getElementById('cfg-token').value.trim();
+  cfg.gist     = document.getElementById('cfg-gist').value.trim();
+  cfg.interval = parseInt(document.getElementById('cfg-interval').value)||300;
+  saveCfg();
+  if(!cfg.token||!cfg.gist){ toast('Preencha token e Gist ID.','error'); return; }
+  document.getElementById('cfg-status').textContent = 'Testando conexão…';
+  await syncFromGist(false);
+  await pushToGist(false);
+  document.getElementById('cfg-status').textContent = '';
+  startAutoSync();
+  toast('Configuração salva e sincronizada!');
+}
+
+function saveInterval(){
+  cfg.interval = parseInt(document.getElementById('cfg-interval').value)||0;
+  saveCfg();
+  startAutoSync();
+  toast('Intervalo salvo!');
+}
+
+function startAutoSync(){
+  if(syncTimer) clearInterval(syncTimer);
+  if(cfg.interval > 0 && cfg.token && cfg.gist){
+    syncTimer = setInterval(()=>syncFromGist(false), cfg.interval*1000);
+  }
 }
 
 function updateDataLists(){
@@ -398,6 +591,7 @@ function switchTab(id, el){
   if(id==='semana') renderSemana();
   if(id==='grade') renderGrade();
   if(id==='historico') renderHistorico();
+  if(id==='config') loadCfgFields();
 }
 
 function changeWeek(dir){
