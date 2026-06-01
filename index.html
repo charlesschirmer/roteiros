@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Escala de Motoristas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=72:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── SAP Fiori Light Theme ── */
+:root {
+  --bg:       #f2f2f2;
+  --bg2:      #ffffff;
+  --bg3:      #f7f7f7;
+  --surface:  #ffffff;
+  --surface2: #f2f2f2;
+  --border:   #d9d9d9;
+  --border2:  #c0c0c0;
+  --text1:    #1d2d3e;
+  --text2:    #556b82;
+  --text3:    #8c9db5;
+  --accent:   #0070f2;
+  --accent2:  #0057c2;
+  --success:  #107e3e;
+  --warning:  #e9730c;
+  --danger:   #bb0000;
+  --font: '72', 'SAP-icons', Arial, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+  --r:  4px;
+  --r2: 8px;
+  --shadow: 0 1px 4px rgba(0,0,0,0.10);
+  --shadow2: 0 2px 8px rgba(0,0,0,0.13);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text1);font-family:var(--font);font-size:14px;line-height:1.5}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:220px 1fr;grid-template-rows:48px 1fr;height:100vh;overflow:hidden}
+.topbar{grid-column:1/-1;display:flex;align-items:center;padding:0 20px;background:var(--accent);gap:16px;z-index:10;box-shadow:var(--shadow2)}
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);padding:12px 0;overflow-y:auto;display:flex;flex-direction:column;gap:1px}
+.main{overflow-y:auto;padding:24px;background:var(--bg)}
+
+/* TOPBAR */
+.logo{font-size:15px;font-weight:700;color:#fff;display:flex;align-items:center;gap:10px;letter-spacing:-.2px}
+.logo-icon{width:26px;height:26px;background:rgba(255,255,255,0.25);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.week-pill{margin-left:auto;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);border-radius:4px;padding:4px 12px;font-size:13px}
+.week-pill button{background:none;border:none;color:#fff;cursor:pointer;padding:0 4px;font-size:17px;line-height:1;opacity:.85;transition:opacity .15s}
+.week-pill button:hover{opacity:1}
+.week-name{font-weight:500;min-width:190px;text-align:center;font-size:13px;color:#fff}
+
+/* SIDEBAR */
+.nav-section{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:10px 16px 4px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 16px;cursor:pointer;color:var(--text2);border:none;background:none;width:100%;text-align:left;font-size:13px;font-family:var(--font);transition:background .12s;border-left:3px solid transparent}
+.nav-item:hover{background:var(--bg3);color:var(--text1)}
+.nav-item.active{color:var(--accent);background:#e8f1fd;border-left-color:var(--accent);font-weight:600}
+.nav-icon{font-size:16px}
+
+/* SECTIONS */
+.section{display:none}.section.active{display:block}
+.page-title{font-size:18px;font-weight:700;margin-bottom:2px;color:var(--text1)}
+.page-sub{font-size:13px;color:var(--text2);margin-bottom:20px}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:20px;box-shadow:var(--shadow)}
+.card-title{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-grid.g3{grid-template-columns:1fr 1fr 1fr}
+.form-grid.g1{grid-template-columns:1fr}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--text2)}
+.field input,.field select{background:#fff;border:1px solid var(--border2);border-radius:var(--r);padding:7px 10px;color:var(--text1);font-family:var(--font);font-size:13px;outline:none;transition:border-color .15s,box-shadow .15s}
+.field input:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,112,242,.15)}
+.field input::placeholder{color:var(--text3)}
+.field select option{background:#fff}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:var(--r);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--text1);transition:all .15s;box-shadow:var(--shadow)}
+.btn:hover{background:var(--bg3);border-color:var(--border2)}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:none}
+.btn-primary:hover{background:var(--accent2);border-color:var(--accent2)}
+.btn-success{background:var(--success);color:#fff;border-color:var(--success);box-shadow:none}
+.btn-success:hover{opacity:.88}
+.btn-danger{background:transparent;color:var(--danger);border-color:rgba(187,0,0,.25)}
+.btn-danger:hover{background:rgba(187,0,0,.07)}
+.btn-sm{padding:4px 10px;font-size:12px;border-radius:3px}
+.btn-icon{padding:6px;border-radius:var(--r)}
+.btn-warning{background:transparent;color:var(--warning);border-color:rgba(233,115,12,.25)}
+.btn-warning:hover{background:rgba(233,115,12,.07)}
+
+/* STAT CARDS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow)}
+.stat-icon{width:38px;height:38px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.stat-icon.blue{background:#e8f1fd}
+.stat-icon.green{background:#e8f5ee}
+.stat-icon.purple{background:#f0eefa}
+.stat-icon.amber{background:#fef3e8}
+.stat-val{font-size:20px;font-weight:700;color:var(--text1);line-height:1.1}
+.stat-lbl{font-size:11px;color:var(--text2);margin-top:1px}
+
+/* TRIPS TABLE */
+.trips-header{display:grid;grid-template-columns:170px 1fr 110px 130px 90px;gap:8px;padding:8px 14px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border);background:var(--bg3)}
+.trip-row{display:grid;grid-template-columns:170px 1fr 110px 130px 90px;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);align-items:center;transition:background .1s}
+.trip-row:hover{background:var(--bg3)}
+.trip-row:last-child{border-bottom:none}
+.day-tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:600}
+.driver-cell{display:flex;align-items:center;gap:8px}
+.avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.driver-name{font-size:13px;font-weight:600;color:var(--text1)}
+.driver-vehicle{font-size:11px;color:var(--text2)}
+.route-cell{font-size:13px;color:var(--text1)}
+.route-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.time-cell{font-family:var(--mono);font-size:12px;color:var(--text1)}
+.row-actions{display:flex;gap:4px}
+
+/* MODAL */
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:1000;align-items:center;justify-content:center}
+.modal-backdrop.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--r2);padding:24px;width:640px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-height:90vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:16px;color:var(--text1);display:flex;justify-content:space-between;align-items:center}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2);padding:0 4px;line-height:1}
+.modal-close:hover{color:var(--text1)}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* WEEK GRID */
+.week-grid{display:grid;grid-template-columns:180px repeat(7,1fr);gap:1px;background:var(--border);border-radius:var(--r2);overflow:hidden;box-shadow:var(--shadow)}
+.wg-cell{background:var(--surface);padding:8px 10px;min-height:60px}
+.wg-header{background:var(--bg3);padding:7px 10px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3)}
+.wg-driver-header{background:var(--bg2)}
+.wg-driver{background:var(--bg3);display:flex;flex-direction:column;justify-content:center}
+.wg-driver-name{font-size:12px;font-weight:600;color:var(--text1)}
+.wg-driver-vehicle{font-size:10px;color:var(--text2);margin-top:2px}
+.wg-trip{border-radius:3px;padding:3px 6px;margin-bottom:3px;font-size:10px;line-height:1.4}
+.wg-trip-time{font-family:var(--mono);font-weight:600}
+.wg-trip-route{color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* HISTORY */
+.history-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.history-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;display:flex;align-items:center;gap:14px;transition:border-color .15s;box-shadow:var(--shadow)}
+.history-card:hover{border-color:var(--accent)}
+.h-week-num{font-size:26px;font-weight:700;color:var(--accent);line-height:1;min-width:50px}
+.h-week-sub{font-size:10px;color:var(--text3);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px}
+.h-week-label{font-size:12px;color:var(--text2)}
+.h-meta{font-size:11px;color:var(--text3);margin-top:4px}
+.h-actions{margin-left:auto;display:flex;gap:6px}
+
+/* TV CANVAS */
+.tv-options{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px}
+.canvas-box{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:16px;overflow:hidden}
+#tv-canvas{width:100%;height:auto;border-radius:4px;display:block;box-shadow:var(--shadow)}
+
+/* TOAST */
+.toast-wrap{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:6px;z-index:9999;pointer-events:none}
+.toast{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:9px 14px;font-size:13px;color:var(--text1);display:flex;align-items:center;gap:8px;animation:slide-in .22s ease;pointer-events:all;box-shadow:var(--shadow2)}
+.toast.success{border-left:3px solid var(--success)}
+.toast.error{border-left:3px solid var(--danger)}
+.toast-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.toast.success .toast-dot{background:var(--success)}
+.toast.error .toast-dot{background:var(--danger)}
+@keyframes slide-in{from{transform:translateX(20px);opacity:0}to{transform:none;opacity:1}}
+
+/* MISC */
+.empty{text-align:center;padding:48px 20px;color:var(--text3)}
+.empty-icon{font-size:32px;margin-bottom:10px;opacity:.4}
+.empty-text{font-size:14px}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+.form-divider{height:1px;background:var(--border);margin:14px 0}
+.d0{background:#ddeefa;color:#0a6ed1}.d1{background:#e8f5ee;color:#107e3e}.d2{background:#fef3e8;color:#c44500}
+.d3{background:#fce9e9;color:#bb0000}.d4{background:#f0eefa;color:#5c35cc}.d5{background:#fce9f0;color:#a0003c}
+.d6{background:#eaf5e9;color:#1b6b0a}
+.av0{background:#ddeefa;color:#0a6ed1}.av1{background:#e8f5ee;color:#107e3e}.av2{background:#fef3e8;color:#c44500}
+.av3{background:#fce9e9;color:#bb0000}.av4{background:#f0eefa;color:#5c35cc}.av5{background:#fce9f0;color:#a0003c}
+.av6{background:#eaf5e9;color:#1b6b0a}.av7{background:#f0eafa;color:#6b1b8a}
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <header class="topbar">
+    <div class="logo"><div class="logo-icon">🚐</div>Escala de Motoristas</div>
+    <div class="week-pill">
+      <button onclick="changeWeek(-1)" title="Semana anterior">‹</button>
+      <span class="week-name" id="week-display">Carregando...</span>
+      <button onclick="changeWeek(1)" title="Próxima semana">›</button>
+    </div>
+  </header>
+
+  <nav class="sidebar">
+    <div class="nav-section">Cadastro</div>
+    <button class="nav-item active" onclick="switchTab('cadastro',this)"><span class="nav-icon">＋</span> Nova Viagem</button>
+    <div class="nav-section" style="margin-top:6px">Visualizar</div>
+    <button class="nav-item" onclick="switchTab('semana',this)"><span class="nav-icon">📅</span> Semana Atual</button>
+    <button class="nav-item" onclick="switchTab('grade',this)"><span class="nav-icon">🗓</span> Grade Semanal</button>
+    <div class="nav-section" style="margin-top:6px">Exportar</div>
+    <button class="nav-item" onclick="switchTab('tv',this)"><span class="nav-icon">📺</span> Gerar para TV</button>
+    <div class="nav-section" style="margin-top:6px">Dados</div>
+    <button class="nav-item" onclick="switchTab('historico',this)"><span class="nav-icon">🗂</span> Histórico</button>
+  </nav>
+
+  <main class="main">
+
+    <!-- CADASTRO -->
+    <div id="sec-cadastro" class="section active">
+      <div class="page-title">Nova Viagem</div>
+      <div class="page-sub">Cadastre uma viagem para a escala semanal</div>
+      <div class="card" style="max-width:740px">
+        <div class="card-title">Identificação</div>
+        <div class="form-grid" style="margin-bottom:12px">
+          <div class="field"><label>Semana</label><input type="week" id="f-week"></div>
+          <div class="field"><label>Dia da Semana</label>
+            <select id="f-day">
+              <option value="0">Segunda-feira</option><option value="1">Terça-feira</option>
+              <option value="2">Quarta-feira</option><option value="3">Quinta-feira</option>
+              <option value="4">Sexta-feira</option><option value="5">Sábado</option><option value="6">Domingo</option>
+            </select>
+          </div>
+          <div class="field"><label>Motorista</label><input type="text" id="f-driver" placeholder="Nome completo" list="dl-drivers"><datalist id="dl-drivers"></datalist></div>
+          <div class="field"><label>Veículo (placa ou nome)</label><input type="text" id="f-vehicle" placeholder="Ex: ABC-1234 / Van Sprinter" list="dl-vehicles"><datalist id="dl-vehicles"></datalist></div>
+        </div>
+        <div class="form-divider"></div>
+        <div class="card-title">Rota e Horários</div>
+        <div class="form-grid g1" style="margin-bottom:12px">
+          <div class="field"><label>Destino / Rota</label><input type="text" id="f-route" placeholder="Ex: Porto Alegre — Aeroporto Salgado Filho"></div>
+        </div>
+        <div class="form-grid" style="margin-bottom:12px">
+          <div class="field"><label>Horário Início</label><input type="time" id="f-time-from"></div>
+          <div class="field"><label>Horário Término (estimado)</label><input type="time" id="f-time-to"></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px">
+          <button class="btn" onclick="clearForm()">Limpar</button>
+          <button class="btn btn-primary" onclick="addTrip()">＋ Adicionar Viagem</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEMANA -->
+    <div id="sec-semana" class="section">
+      <div class="page-title" id="sem-title">Semana</div>
+      <div class="page-sub">Todas as viagens da semana selecionada</div>
+      <div class="stats-row" id="sem-stats"></div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="trips-header">
+          <div>Motorista</div><div>Rota</div><div>Dia</div><div>Período</div><div>Ações</div>
+        </div>
+        <div id="sem-list"></div>
+      </div>
+    </div>
+
+    <!-- GRADE -->
+    <div id="sec-grade" class="section">
+      <div class="page-title">Grade Semanal</div>
+      <div class="page-sub">Visão de todos os motoristas × dias da semana</div>
+      <div id="grade-container"></div>
+    </div>
+
+    <!-- TV -->
+    <div id="sec-tv" class="section">
+      <div class="page-title">Gerar para TV</div>
+      <div class="page-sub">Crie uma imagem de alta resolução para exibir na televisão da sala dos motoristas</div>
+      <div class="card" style="max-width:740px;margin-bottom:20px">
+        <div class="card-title">Configurações da imagem</div>
+        <div class="tv-options">
+          <div class="field"><label>Semana</label><input type="week" id="tv-week"></div>
+          <div class="field"><label>Resolução</label>
+            <select id="tv-format">
+              <option value="1920x1080">Full HD — 1920×1080</option>
+              <option value="3840x2160">4K — 3840×2160</option>
+              <option value="1280x720">HD — 1280×720</option>
+            </select>
+          </div>
+          <div class="field"><label>Tema</label>
+            <select id="tv-theme">
+              <option value="dark">Escuro</option>
+              <option value="light">Claro</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn btn-primary" onclick="generateTV()">📺 Gerar Imagem</button>
+          <button class="btn btn-success" id="btn-download" onclick="downloadTV()" style="display:none">⬇ Baixar PNG</button>
+        </div>
+      </div>
+      <div class="canvas-box"><canvas id="tv-canvas"></canvas></div>
+    </div>
+
+    <!-- HISTÓRICO -->
+    <div id="sec-historico" class="section">
+      <div class="page-title">Histórico de Semanas</div>
+      <div class="page-sub">Semanas cadastradas e suas viagens</div>
+      <div class="history-grid" id="hist-list"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL EDITAR -->
+<div class="modal-backdrop" id="edit-modal">
+  <div class="modal">
+    <div class="modal-title">
+      Editar Viagem
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="card-title">Identificação</div>
+    <div class="form-grid" style="margin-bottom:12px">
+      <div class="field"><label>Semana</label><input type="week" id="e-week"></div>
+      <div class="field"><label>Dia da Semana</label>
+        <select id="e-day">
+          <option value="0">Segunda-feira</option><option value="1">Terça-feira</option>
+          <option value="2">Quarta-feira</option><option value="3">Quinta-feira</option>
+          <option value="4">Sexta-feira</option><option value="5">Sábado</option><option value="6">Domingo</option>
+        </select>
+      </div>
+      <div class="field"><label>Motorista</label><input type="text" id="e-driver" list="dl-drivers"></div>
+      <div class="field"><label>Veículo</label><input type="text" id="e-vehicle" list="dl-vehicles"></div>
+    </div>
+    <div class="form-divider"></div>
+    <div class="card-title">Rota e Horários</div>
+    <div class="form-grid g1" style="margin-bottom:12px">
+      <div class="field"><label>Destino / Rota</label><input type="text" id="e-route"></div>
+    </div>
+    <div class="form-grid" style="margin-bottom:0">
+      <div class="field"><label>Horário Início</label><input type="time" id="e-time-from"></div>
+      <div class="field"><label>Horário Término</label><input type="time" id="e-time-to"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEdit()">💾 Salvar Alterações</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+const DAYS = ['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo'];
+const DAY_COLORS_HEX = ['#0a6ed1','#107e3e','#c44500','#bb0000','#5c35cc','#a0003c','#1b6b0a'];
+
+let state = JSON.parse(localStorage.getItem('escala_v2') || '{"trips":[],"savedWeeks":[]}');
+let currentWeek = '';
+let editingId = null;
+
+function save(){ localStorage.setItem('escala_v2', JSON.stringify(state)); }
+
+function toast(msg, type='success'){
+  const w = document.getElementById('toast-wrap');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.innerHTML = `<span class="toast-dot"></span>${msg}`;
+  w.appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(()=>t.remove(),300); }, 2800);
+}
+
+function getWeekLabel(w){
+  if(!w) return '—';
+  const [yr,wn] = w.split('-W');
+  const jan1 = new Date(parseInt(yr),0,1);
+  const dayOfWeek = jan1.getDay() || 7;
+  const firstMon = new Date(jan1); firstMon.setDate(jan1.getDate() + (dayOfWeek===1?0:8-dayOfWeek));
+  const mon = new Date(firstMon); mon.setDate(firstMon.getDate() + (parseInt(wn)-1)*7);
+  const sun = new Date(mon); sun.setDate(mon.getDate()+6);
+  const fmt = d => d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+  return `Semana ${wn}/${yr} — ${fmt(mon)} a ${fmt(sun)}`;
+}
+
+function getCurrentWeek(){
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(),0,1);
+  const dayOfYear = Math.floor((now - startOfYear)/(86400000));
+  const weekNum = Math.ceil((dayOfYear + startOfYear.getDay())/7);
+  return `${now.getFullYear()}-W${String(weekNum).padStart(2,'0')}`;
+}
+
+function initApp(){
+  currentWeek = getCurrentWeek();
+  document.getElementById('f-week').value = currentWeek;
+  document.getElementById('tv-week').value = currentWeek;
+  document.getElementById('week-display').textContent = getWeekLabel(currentWeek);
+  updateDataLists();
+}
+
+function updateDataLists(){
+  const drivers = [...new Set(state.trips.map(t=>t.driver))];
+  const vehicles = [...new Set(state.trips.map(t=>t.vehicle))];
+  document.getElementById('dl-drivers').innerHTML = drivers.map(d=>`<option value="${d}">`).join('');
+  document.getElementById('dl-vehicles').innerHTML = vehicles.map(v=>`<option value="${v}">`).join('');
+}
+
+function switchTab(id, el){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el) el.classList.add('active');
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  if(id==='semana') renderSemana();
+  if(id==='grade') renderGrade();
+  if(id==='historico') renderHistorico();
+}
+
+function changeWeek(dir){
+  const [yr,wn] = currentWeek.split('-W');
+  let w = parseInt(wn)+dir, y = parseInt(yr);
+  if(w<1){w=52;y--;} if(w>52){w=1;y++;}
+  currentWeek = `${y}-W${String(w).padStart(2,'0')}`;
+  document.getElementById('week-display').textContent = getWeekLabel(currentWeek);
+  const active = document.querySelector('.section.active');
+  if(active && active.id==='sec-semana') renderSemana();
+  if(active && active.id==='sec-grade') renderGrade();
+}
+
+function clearForm(){
+  ['f-driver','f-vehicle','f-route','f-time-from','f-time-to'].forEach(id=>{
+    document.getElementById(id).value='';
+  });
+}
+
+function addTrip(){
+  const week = document.getElementById('f-week').value;
+  const day = parseInt(document.getElementById('f-day').value);
+  const driver = document.getElementById('f-driver').value.trim();
+  const vehicle = document.getElementById('f-vehicle').value.trim();
+  const route = document.getElementById('f-route').value.trim();
+  const timeFrom = document.getElementById('f-time-from').value;
+  const timeTo = document.getElementById('f-time-to').value;
+  if(!week||!driver||!vehicle){toast('Preencha ao menos semana, motorista e veículo.','error');return;}
+  state.trips.push({id:Date.now(),week,day,driver,vehicle,route,timeFrom,timeTo});
+  if(!state.savedWeeks.includes(week)) state.savedWeeks.push(week);
+  save(); updateDataLists(); clearForm();
+  toast(`Viagem de ${driver} adicionada!`);
+}
+
+function deleteTrip(id){
+  if(!confirm('Remover esta viagem?')) return;
+  state.trips = state.trips.filter(t=>t.id!==id);
+  save(); renderSemana(); toast('Viagem removida.');
+}
+
+function openEdit(id){
+  const t = state.trips.find(x=>x.id===id);
+  if(!t) return;
+  editingId = id;
+  document.getElementById('e-week').value = t.week||'';
+  document.getElementById('e-day').value = t.day;
+  document.getElementById('e-driver').value = t.driver;
+  document.getElementById('e-vehicle').value = t.vehicle;
+  document.getElementById('e-route').value = t.route||'';
+  document.getElementById('e-time-from').value = t.timeFrom||'';
+  document.getElementById('e-time-to').value = t.timeTo||'';
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+function closeModal(){
+  document.getElementById('edit-modal').classList.remove('open');
+  editingId = null;
+}
+
+function saveEdit(){
+  if(!editingId) return;
+  const idx = state.trips.findIndex(x=>x.id===editingId);
+  if(idx===-1) return;
+  const driver = document.getElementById('e-driver').value.trim();
+  const vehicle = document.getElementById('e-vehicle').value.trim();
+  if(!driver||!vehicle){toast('Motorista e veículo são obrigatórios.','error');return;}
+  state.trips[idx] = {
+    ...state.trips[idx],
+    week: document.getElementById('e-week').value,
+    day: parseInt(document.getElementById('e-day').value),
+    driver,
+    vehicle,
+    route: document.getElementById('e-route').value.trim(),
+    timeFrom: document.getElementById('e-time-from').value,
+    timeTo: document.getElementById('e-time-to').value,
+  };
+  save(); updateDataLists(); closeModal(); renderSemana();
+  toast('Viagem atualizada!');
+}
+
+// Fechar modal clicando no backdrop
+document.getElementById('edit-modal').addEventListener('click', function(e){
+  if(e.target===this) closeModal();
+});
+
+function getDriverColor(name){
+  let h = 0; for(let i=0;i<name.length;i++) h = (h*31+name.charCodeAt(i))%8;
+  return h;
+}
+
+function renderSemana(){
+  const trips = state.trips.filter(t=>t.week===currentWeek);
+  document.getElementById('sem-title').textContent = getWeekLabel(currentWeek);
+  const drivers = [...new Set(trips.map(t=>t.driver))].length;
+  const vehicles = [...new Set(trips.map(t=>t.vehicle))].length;
+  document.getElementById('sem-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-icon blue">🚗</div><div><div class="stat-val">${trips.length}</div><div class="stat-lbl">Viagens</div></div></div>
+    <div class="stat-card"><div class="stat-icon green">👨‍✈️</div><div><div class="stat-val">${drivers}</div><div class="stat-lbl">Motoristas</div></div></div>
+    <div class="stat-card"><div class="stat-icon purple">🚐</div><div><div class="stat-val">${vehicles}</div><div class="stat-lbl">Veículos</div></div></div>
+    <div class="stat-card"><div class="stat-icon amber">📅</div><div><div class="stat-val">${[...new Set(trips.map(t=>t.day))].length}</div><div class="stat-lbl">Dias ativos</div></div></div>
+  `;
+  if(trips.length===0){
+    document.getElementById('sem-list').innerHTML='<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">Nenhuma viagem cadastrada para esta semana</div></div>';
+    return;
+  }
+  const sorted = [...trips].sort((a,b)=>a.day-b.day || (a.timeFrom||'').localeCompare(b.timeFrom||''));
+  document.getElementById('sem-list').innerHTML = sorted.map(t=>{
+    const ci = getDriverColor(t.driver);
+    const ini = t.driver.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const timeStr = t.timeFrom&&t.timeTo ? `${t.timeFrom} – ${t.timeTo}` : '—';
+    return `<div class="trip-row">
+      <div class="driver-cell">
+        <div class="avatar av${ci}">${ini}</div>
+        <div><div class="driver-name">${t.driver}</div><div class="driver-vehicle">${t.vehicle}</div></div>
+      </div>
+      <div><div class="route-cell">${t.route||'—'}</div></div>
+      <div><span class="day-tag d${t.day}">${DAYS[t.day]}</span></div>
+      <div class="time-cell">${timeStr}</div>
+      <div class="row-actions">
+        <button class="btn btn-warning btn-sm btn-icon" onclick="openEdit(${t.id})" title="Editar">✏️</button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteTrip(${t.id})" title="Remover">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderGrade(){
+  const trips = state.trips.filter(t=>t.week===currentWeek);
+  const drivers = [...new Set(trips.map(t=>t.driver))].sort();
+  const c = document.getElementById('grade-container');
+  if(drivers.length===0){
+    c.innerHTML='<div class="empty"><div class="empty-icon">🗓</div><div class="empty-text">Nenhuma viagem para exibir na grade</div></div>';
+    return;
+  }
+  let html = '<div class="week-grid">';
+  html += '<div class="wg-cell wg-driver-header wg-header"></div>';
+  DAYS.forEach((d,i)=>{
+    html += `<div class="wg-cell wg-header" style="color:${DAY_COLORS_HEX[i]};text-align:center">${d}</div>`;
+  });
+  drivers.forEach(driver=>{
+    const driverTrips = trips.filter(t=>t.driver===driver);
+    const vehicles = [...new Set(driverTrips.map(t=>t.vehicle))].join(', ');
+    html += `<div class="wg-cell wg-driver"><div class="wg-driver-name">${driver}</div><div class="wg-driver-vehicle">${vehicles}</div></div>`;
+    for(let d=0;d<7;d++){
+      const dayTrips = driverTrips.filter(t=>t.day===d);
+      html += '<div class="wg-cell">';
+      if(dayTrips.length===0){ html += '<span style="color:var(--text3);font-size:11px">—</span>'; }
+      else {
+        const color = DAY_COLORS_HEX[d];
+        dayTrips.forEach(trip=>{
+          const timeStr = trip.timeFrom&&trip.timeTo?`${trip.timeFrom}–${trip.timeTo}`:'';
+          const route = trip.route||'';
+          html += `<div class="wg-trip" style="background:${color}18;border:1px solid ${color}44">
+            <div class="wg-trip-time" style="color:${color}">${timeStr}</div>
+            <div class="wg-trip-route">${route}</div>
+          </div>`;
+        });
+      }
+      html += '</div>';
+    }
+  });
+  html += '</div>';
+  c.innerHTML = html;
+}
+
+function renderHistorico(){
+  const weeks = [...(state.savedWeeks||[])].sort().reverse();
+  if(weeks.length===0){
+    document.getElementById('hist-list').innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🗂</div><div class="empty-text">Nenhuma semana salva ainda</div></div>';
+    return;
+  }
+  document.getElementById('hist-list').innerHTML = weeks.map(w=>{
+    const trips = state.trips.filter(t=>t.week===w);
+    const drivers = [...new Set(trips.map(t=>t.driver))].length;
+    const wn = w.split('-W')[1];
+    return `<div class="history-card">
+      <div class="h-week-num">W${wn}</div>
+      <div>
+        <div class="h-week-sub">Semana</div>
+        <div class="h-week-label">${getWeekLabel(w)}</div>
+        <div class="h-meta">${trips.length} viagens · ${drivers} motoristas</div>
+      </div>
+      <div class="h-actions">
+        <button class="btn btn-sm" onclick="loadWeek('${w}')">Ver</button>
+        <button class="btn btn-sm btn-primary" onclick="quickTV('${w}')">📺 TV</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function loadWeek(w){
+  currentWeek = w;
+  document.getElementById('week-display').textContent = getWeekLabel(w);
+  document.querySelectorAll('.nav-item')[1].click();
+}
+
+function quickTV(w){
+  document.getElementById('tv-week').value = w;
+  document.querySelectorAll('.nav-item')[3].click();
+  generateTV();
+}
+
+/* ──── TV CANVAS ──── */
+function generateTV(){
+  const week = document.getElementById('tv-week').value;
+  const fmt = document.getElementById('tv-format').value;
+  const theme = document.getElementById('tv-theme').value;
+  const [W,H] = fmt.split('x').map(Number);
+  const s = W/1920;
+  const trips = state.trips.filter(t=>t.week===week);
+  const drivers = [...new Set(trips.map(t=>t.driver))].sort();
+  const canvas = document.getElementById('tv-canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  const T = theme==='dark' ? {
+    bg:'#0b0d14', surface:'#1e2238', surface2:'#252a42',
+    border:'rgba(255,255,255,0.08)', text1:'#e8eaf6', text2:'#8b90b8', text3:'#555a7a',
+    header:'#0d1022', accent:'#4f8ef7'
+  } : {
+    bg:'#f2f2f2', surface:'#ffffff', surface2:'#f7f7f7',
+    border:'rgba(0,0,0,0.09)', text1:'#1d2d3e', text2:'#556b82', text3:'#8c9db5',
+    header:'#1d3461', accent:'#0070f2'
+  };
+
+  function rr(x,y,w,h,r){
+    if(w<=0||h<=0) return;
+    r=Math.min(r,w/2,h/2);
+    ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
+    ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+  }
+
+  // Função de texto com quebra de linha automática
+  function fillTextWrapped(ctx, text, x, y, maxW, lineH, maxLines){
+    const words = text.split(' ');
+    let line = '';
+    let linesDrawn = 0;
+    for(let i=0;i<words.length;i++){
+      const test = line ? line+' '+words[i] : words[i];
+      if(ctx.measureText(test).width > maxW && line){
+        ctx.fillText(line, x, y + linesDrawn*lineH);
+        linesDrawn++;
+        if(linesDrawn >= maxLines){ ctx.fillText('…', x, y + (linesDrawn-1)*lineH); return; }
+        line = words[i];
+      } else { line = test; }
+    }
+    if(line) ctx.fillText(line, x, y + linesDrawn*lineH);
+  }
+
+  ctx.fillStyle = T.bg; ctx.fillRect(0,0,W,H);
+
+  const px=56*s, py=36*s;
+  const hH=90*s;
+  ctx.fillStyle = T.header; rr(px,py,W-px*2,hH,10*s); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font=`700 ${28*s}px Arial`; ctx.textBaseline='middle';
+  ctx.fillText('Escala de Motoristas', px+22*s, py+hH/2-12*s);
+  ctx.font=`400 ${15*s}px Arial`; ctx.fillStyle='rgba(255,255,255,0.6)';
+  ctx.fillText(getWeekLabel(week), px+22*s, py+hH/2+13*s);
+  ctx.textAlign='right';
+  ctx.font=`400 ${13*s}px Arial`; ctx.fillStyle='rgba(255,255,255,0.45)';
+  const now = new Date();
+  ctx.fillText(`${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`, W-px-16*s, py+hH/2+13*s);
+  ctx.textAlign='left';
+
+  const tableTop = py+hH+16*s;
+  const chH = 42*s;
+  const drvW = 240*s;
+  const dayW = (W-px*2-drvW)/7;
+  const maxRows = drivers.length||1;
+  // rowH dinâmico: distribui o espaço disponível, com mínimo de 110s e máximo de 140s
+  const availH = H - tableTop - chH - py - 12*s;
+  const rowH = Math.max(110*s, Math.min(140*s, availH/maxRows));
+
+  // Cabeçalho motorista
+  ctx.fillStyle=T.surface2; rr(px,tableTop,drvW-4*s,chH,6*s); ctx.fill();
+  ctx.strokeStyle=T.border; ctx.lineWidth=1*s; ctx.stroke();
+  ctx.fillStyle=T.text2; ctx.font=`500 ${13*s}px Arial`; ctx.textBaseline='middle';
+  ctx.fillText('Motorista / Veículo', px+14*s, tableTop+chH/2);
+
+  // Cabeçalhos dos dias
+  for(let d=0;d<7;d++){
+    const x = px+drvW+d*dayW;
+    const col = DAY_COLORS_HEX[d];
+    ctx.fillStyle=col+(theme==='dark'?'33':'22'); rr(x,tableTop,dayW-4*s,chH,6*s); ctx.fill();
+    ctx.strokeStyle=col+'55'; ctx.lineWidth=1*s; ctx.stroke();
+    ctx.fillStyle=col; ctx.font=`600 ${14*s}px Arial`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(DAYS[d], x+dayW/2-2*s, tableTop+chH/2);
+    ctx.textAlign='left';
+  }
+
+  if(drivers.length===0){
+    ctx.fillStyle=T.text2; ctx.font=`400 ${20*s}px Arial`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('Nenhuma viagem cadastrada para esta semana', W/2, H/2);
+    ctx.textAlign='left';
+  } else {
+    drivers.forEach((driver,ri)=>{
+      const ry = tableTop+chH+6*s+ri*rowH;
+      const ci = getDriverColor(driver);
+      const col = DAY_COLORS_HEX[ci%7];
+
+      // Célula motorista
+      ctx.fillStyle=T.surface; rr(px,ry,drvW-4*s,rowH-5*s,8*s); ctx.fill();
+      ctx.strokeStyle=T.border; ctx.lineWidth=1*s; ctx.stroke();
+      ctx.fillStyle=col+'33'; ctx.beginPath(); ctx.arc(px+22*s,ry+rowH/2-3*s,15*s,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle=col; ctx.font=`700 ${13*s}px Arial`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(driver.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2), px+22*s, ry+rowH/2-3*s);
+      ctx.textAlign='left';
+      ctx.fillStyle=T.text1; ctx.font=`600 ${14*s}px Arial`; ctx.textBaseline='middle';
+      ctx.fillText(driver, px+44*s, ry+rowH/2-10*s);
+      const driverTrips = trips.filter(t=>t.driver===driver);
+      const veh = [...new Set(driverTrips.map(t=>t.vehicle))].join(', ');
+      ctx.fillStyle=T.text2; ctx.font=`400 ${13*s}px Arial`;
+      ctx.fillText(veh, px+44*s, ry+rowH/2+11*s);
+
+      // Células dos dias
+      for(let d=0;d<7;d++){
+        const x = px+drvW+d*dayW;
+        const dayTrips = driverTrips.filter(t=>t.day===d);
+        ctx.fillStyle=T.surface; rr(x,ry,dayW-4*s,rowH-5*s,8*s); ctx.fill();
+        ctx.strokeStyle=T.border; ctx.lineWidth=0.5*s; ctx.stroke();
+        if(dayTrips.length>0){
+          const dCol = DAY_COLORS_HEX[d];
+          const cellPad = 7*s;
+          const nSlots = Math.min(dayTrips.length,2);
+          const slotH = (rowH-5*s - cellPad*2) / nSlots;
+
+          dayTrips.slice(0,2).forEach((trip,ti)=>{
+            const ty = ry + cellPad + ti*slotH;
+            const th = slotH - 4*s;
+            const innerX = x+9*s;
+            const innerW = dayW - 18*s;
+
+            // fundo do slot
+            ctx.fillStyle=dCol+(theme==='dark'?'20':'15');
+            rr(x+5*s, ty, dayW-13*s, th, 5*s); ctx.fill();
+            ctx.strokeStyle=dCol+'44'; ctx.lineWidth=1*s; ctx.stroke();
+
+            // barra lateral colorida fina
+            ctx.fillStyle=dCol;
+            rr(x+5*s, ty, 3*s, th, 2*s); ctx.fill();
+
+            let curY = ty + 7*s;
+
+            // Horário — pequeno, discreto
+            const tStr = trip.timeFrom&&trip.timeTo
+              ? `${trip.timeFrom} – ${trip.timeTo}`
+              : '';
+            if(tStr){
+              ctx.fillStyle=dCol; ctx.font=`600 ${12*s}px Arial`; ctx.textBaseline='top';
+              ctx.fillText(tStr, innerX, curY);
+              curY += 14*s;
+            }
+
+            // Destino — destaque, com quebra de linha
+            const rte = trip.route||'';
+            if(rte){
+              ctx.fillStyle=T.text1; ctx.font=`600 ${13*s}px Arial`; ctx.textBaseline='top';
+              const lineH = 15*s;
+              const maxLines = trip.from&&trip.to&&trip.route ? 2 : 3;
+              fillTextWrapped(ctx, rte, innerX, curY, innerW, lineH, maxLines);
+              // mede quantas linhas foram desenhadas para avançar curY
+              const estLines = Math.min(maxLines, Math.ceil(ctx.measureText(rte).width / innerW) + 1);
+              curY += estLines * lineH;
+            }
+
+
+          });
+
+          if(dayTrips.length>2){
+            ctx.fillStyle=dCol; ctx.font=`600 ${12*s}px Arial`; ctx.textBaseline='bottom';
+            ctx.fillText(`+${dayTrips.length-2} mais`, x+9*s, ry+rowH-8*s);
+          }
+        }
+      }
+    });
+  }
+
+  // Rodapé
+  ctx.fillStyle=T.text3; ctx.font=`400 ${12*s}px Arial`; ctx.textBaseline='bottom';
+  ctx.fillText('Sistema de Gestão de Escala de Motoristas', px, H-py/2);
+  ctx.textAlign='right';
+  ctx.fillText(`${drivers.length} motorista(s) · ${trips.length} viagem(ns)`, W-px, H-py/2);
+  ctx.textAlign='left';
+
+  document.getElementById('btn-download').style.display='inline-flex';
+  if(!state.savedWeeks.includes(week)) state.savedWeeks.push(week);
+  save();
+  toast('Imagem gerada! Clique em Baixar para salvar.');
+}
+
+function downloadTV(){
+  const canvas = document.getElementById('tv-canvas');
+  const week = document.getElementById('tv-week').value;
+  const link = document.createElement('a');
+  link.download = `escala-motoristas-${week}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+initApp();
+</script>
+</body>
+</html>
